@@ -14,12 +14,12 @@ where $r = \sqrt{x^2 + y^2}$ which is the radial distance between the planet and
 
 For Mercury, the precession is $\dot{\phi} =$ 531.7 secondes d'arc/siecle ($\approx 1.5\times 10^(-15) rad/s), the system of equation becomes : 
 
- - $\displaystyle \frac{dv_x}{dt} = -GM \frac{x}{r^3}$ + \dot{\phi} \frac{dy}{dt}
- - $\displaystyle \frac{dv_y}{dt} = -GM \frac{y}{r^3}$ - \dot{\phi} \frac{dx}{dt}
+ - $\displaystyle \frac{dv_x}{dt} = -GM \frac{x}{r^3}$ + $\displaystyle \dot{\phi} \frac{dy}{dt}$
+ - $\displaystyle \frac{dv_y}{dt} = -GM \frac{y}{r^3}$ - $\displaystyle \dot{\phi} \frac{dx}{dt}$
 
 I first need to give the differents parameters for each planet (Name, distance from the Sun, ellipticity, color and the size) :
 
-params = {
+     params = {
     'Mercury': (57.91e9, 0.2056, 'gray', 0.13),
     'Venus': (108.2e9, 0.0068, 'yellow', 0.5),
     'Earth': (1.496e11, 0.0167, 'royalblue', 0.5),
@@ -28,7 +28,32 @@ params = {
     'Saturn': (1.42e12, 0.056, 'gold', 1.3),
     'Uranus': (2.87e12, 0.046, 'lightseagreen', 0.8),
     'Neptune': (4.5e12, 0.010, 'blue', 0.8)
-}
+    }
 
-Once the equation system done, I need to choose my initial condition for each planet 
+
+Once the system of equations is defined, I need to choose the initial conditions for each planet based on the parameters. The initial conditions are determined by the initial distance, which is the semi-major axis $a(1-e)$, and the initial velocity, given by $\displaystyle v = \sqrt{\frac{GM}{a}}$.
+
+    initial_conditions = {planet: [a * (1 - e), 0, 0, v(a, planet)] for planet, (a, e, _, _) in params.items()}
+
+Then, we numerically solve the equations of motion for each planet using odeint from the scipy library. We create a large yellow dot representing the Sun and place it at the center of the plot.
+
+The goal is to generate the motion of the planets and plot their trajectories to clearly observe their orbits. We also include a timer in years (based on Earth's orbit). For each time step, we plot the new position of each planet $(x=$solution[i, 0], $y=$solution[i, 1]$)$ and their trajectories by keeping a few points plotted during the animation.
+
+    def animate(i):
+    for (planet, solution, line, planet_point, trail) in zip(params, solutions.values(), lines, planets, trails):
+        x = solution[i, 0]
+        y = solution[i, 1]
+        line.set_data(x, y)
+        planet_point.set_data(x, y)
+        trail.set_data(solution[:i, 0], solution[:i, 1])
+    sun.set_offsets([0, 0])
+
+    # Update time in years
+    years_elapsed = t_values[i] / (365.25 * 24 * 60 * 60)  # Convert to years
+    time_text.set_text(f'Time elapsed: {years_elapsed:.2f} years')
+    
+    return lines + planets + trails + [sun, time_text]
+
+We animate the motion using FuncAnimation from the matplotlib.animation library.
+
 
