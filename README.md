@@ -12,7 +12,7 @@ In cartesian coordinates, the equation becomes 2 equations :
 
 where $r = \sqrt{x^2 + y^2}$ which is the radial distance between the planet and the star.
 
-For Mercury, the precession is $\dot{\phi} =$ 531.7 secondes d'arc/siecle $(\approx 1.5\times 10^{-15} rad/s)$, the system of equation becomes : 
+For Mercury, the precession is $\dot{\phi} =$ 531.7 seconds of arc per century $(\approx 1.5\times 10^{-15} rad/s)$, but we'll arbitrary take $\dot{\phi} = 10^{-6] rad/s$ the system of equation becomes : 
 
  - $\displaystyle \frac{dv_x}{dt} = -GM \frac{x}{r^3}$ + $\displaystyle \dot{\phi} \frac{dy}{dt}$
  - $\displaystyle \frac{dv_y}{dt} = -GM \frac{y}{r^3}$ - $\displaystyle \dot{\phi} \frac{dx}{dt}$
