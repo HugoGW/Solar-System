@@ -4,7 +4,7 @@
 To simulate the planets' motion, we first need to find the equation of motion and solve it.
 We could directly use the Keplerian solution of the motion but i'd rather use a numerical method and considering the precession of Mercury's perihelion
 
-The equation of motion is given with Newton's second law : $\displaystyle \sum_{k} \vec{F}_k = m\vec{a}$ where $\displaystyle \sum_{k} \vec{F}_k = G \frac{Mm}{r^3} \vec{r}$.
+The equation of motion is given with Newton's second law : $\sum_{k} \vec{F}_k = m \vec{a}$ where $\displaystyle \sum_{k} \vec{F}_k = G \frac{Mm}{r^3} \vec{r}$.
 In cartesian coordinates, the equation becomes 2 equations :
 
  - $\displaystyle \frac{dv_x}{dt} = -GM \frac{x}{r^3}$ where $\displaystyle \frac{dv_x}{dt} = \frac{d^2x}{dt^2}$
@@ -37,7 +37,7 @@ Once the system of equations is defined, I need to choose the initial conditions
 
 Then, we numerically solve the equations of motion for each planet using odeint from the scipy library. We create a large yellow dot representing the Sun and place it at the center of the plot.
 
-The goal is to generate the motion of the planets and plot their trajectories to clearly observe their orbits. We also include a timer in years (based on Earth's orbit). For each time step, we plot the new position of each planet $(x=$solution[i, 0], $y=$solution[i, 1]$)$ and their trajectories by keeping a few points plotted during the animation.
+The goal is to generate the motion of the planets and plot their trajectories to clearly observe their orbits. We also include a timer in years (based on Earth's orbit). For each time step, we plot the new position of each planet $(x=$ solution[i, 0], $y=$ solution[i, 1] $)$ and their trajectories by keeping a few points plotted during the animation.
 
     def animate(i):
     for (planet, solution, line, planet_point, trail) in zip(params, solutions.values(), lines, planets, trails):
