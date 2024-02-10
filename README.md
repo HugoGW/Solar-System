@@ -8,10 +8,13 @@ The equation of motion is given with Newton's second law $\displaystyle \sum_k \
 
 In cartesian coordinates, the equation becomes 2 equations :
 
- - $\displaystyle \frac{dv_x}{dt} = -GM \frac{x}{r^3}$ where $\displaystyle \frac{dv_x}{dt} = \frac{d^2x}{dt^2}$
- - $\displaystyle \frac{dv_y}{dt} = -GM \frac{y}{r^3}$ where $\displaystyle \frac{dv_y}{dt} = \frac{d^2y}{dt^2}$
+ - $\displaystyle \frac{dv_x}{dt} = \frac{d^2x}{dt^2} = -\frac{GM}{r^2} \cos(\theta)$ where $\displaystyle \cos(\theta) = \frac{x}{r}$
+ - $\displaystyle \frac{dv_y}{dt} = \frac{d^2y}{dt^2} = -\frac{GM}{r^2} \sin(\theta)$ where $\displaystyle \sin(\theta) = \frac{y}{r}$
 
-where $r = \sqrt{x^2 + y^2}$ which is the radial distance between the planet and the star.
+where $r = \sqrt{x^2 + y^2}$ which is the radial distance between the planet and the star. The final system of equations becomes :
+
+ - $\displaystyle \frac{d^2x}{dt^2} = -GM\frac{x}{(x^2 + y^2)^{3/2}} $ 
+ - $\displaystyle \frac{d^2y}{dt^2} = -GM\frac{y}{(x^2 + y^2)^{3/2}}$
 
 For Mercury, the precession is $\dot{\phi} =$ 531.7 seconds of arc per century $(\approx 1.5\times 10^{-15} rad/s)$, but we'll arbitrary take $\dot{\phi} = 10^{-7} rad/s$ the system of equation becomes : 
 
