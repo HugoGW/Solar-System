@@ -1,71 +1,139 @@
-# Solar-System
-2D Simulation of the Solar System by numerically solving the equations of motion for the planets.
+# Solar System Simulator — 2D Gravitational N-Body Simulation
 
-To simulate the planets' motion, we first need to find the equation of motion and solve it.
-We could directly use the Keplerian solution of the motion but i'd rather use a numerical method and considering the precession of Mercury's perihelion
+This project simulates the motion of the eight planets of the Solar System using **Newtonian mechanics**, considering **mutual gravitational interactions** and optimized with **`numba`** to accelerate the numerical integration.
 
-The equation of motion is given with Newton's second law $\displaystyle \sum_k \vec{F}_k = m \vec{a} \Leftrightarrow \sum_k \vec{F}_k = \frac{GMm}{r^3}\vec{r}$.
+Rather than relying on analytical Keplerian solutions, we solve the full system of differential equations numerically, allowing us to observe effects such as **planetary perturbations** and accurately reflect elliptical orbits and relative mass influences.
 
-In cartesian coordinates, the equation becomes 2 equations :
+---
 
- - $\displaystyle \frac{dv_x}{dt} = \frac{d^2x}{dt^2} = -\frac{GM}{r^2} \cos(\theta)$ where $\displaystyle \cos(\theta) = \frac{x}{r}$
- - $\displaystyle \frac{dv_y}{dt} = \frac{d^2y}{dt^2} = -\frac{GM}{r^2} \sin(\theta)$ where $\displaystyle \sin(\theta) = \frac{y}{r}$
+## Physics Behind the Simulation
 
-where $r = \sqrt{x^2 + y^2}$ which is the radial distance between the planet and the star. The final system of equations becomes :
+We solve Newton’s second law for a gravitationally interacting N-body system:
 
- - $\displaystyle \frac{d^2x}{dt^2} = -GM\frac{x}{(x^2 + y^2)^{3/2}} $ 
- - $\displaystyle \frac{d^2y}{dt^2} = -GM\frac{y}{(x^2 + y^2)^{3/2}}$
+$$
+\sum_k \vec{F}_k = m \vec{a} \quad \Rightarrow \quad \vec{a} = \frac{d^2\vec{r}}{dt^2} =  -G \sum \frac{m_j (\vec{r}_i - \vec{r}_j)}{|\vec{r}_i - \vec{r}_j|^3}
+$$
 
-For Mercury, the precession is $\dot{\phi} =$ 531.7 seconds of arc per century $(\approx 1.5\times 10^{-15} rad/s)$, but we'll arbitrary take $\dot{\phi} = 10^{-7} rad/s$ the system of equation becomes : 
+where $j \neq i$. For each planet $i$, this includes:
 
- - $\displaystyle \frac{dv_x}{dt} = -GM \frac{x}{r^3}$ + $\displaystyle \dot{\phi} \frac{dy}{dt}$
- - $\displaystyle \frac{dv_y}{dt} = -GM \frac{y}{r^3}$ - $\displaystyle \dot{\phi} \frac{dx}{dt}$
+* The attraction by the **Sun** (at the origin)
+* The attractions by all other **planets**
 
-I first need to give the differents parameters for each planet (Name, distance from the Sun, ellipticity, color and the size) :
+In Cartesian coordinates, this gives for planet $i$:
 
-     params = {
-    'Mercury': (57.91e9, 0.2056, 'gray', 0.13),
-    'Venus': (108.2e9, 0.0068, 'yellow', 0.5),
-    'Earth': (1.496e11, 0.0167, 'royalblue', 0.5),
-    'Mars': (227.9e9, 0.0934, 'red', 0.4),
-    'Jupiter': (778.3e9, 0.049, 'orange', 1.5),
-    'Saturn': (1.42e12, 0.056, 'gold', 1.3),
-    'Uranus': (2.87e12, 0.046, 'lightseagreen', 0.8),
-    'Neptune': (4.5e12, 0.010, 'blue', 0.8)
-    }
+$$
+\frac{d^2x_i}{dt^2} = -G M_{\odot} \frac{x_i}{r_i^3} + \sum_{j \neq i} G m_j \frac{x_j - x_i}{|\vec{r}_j - \vec{r}_i|^3}
+$$
 
+$$
+\frac{d^2y_i}{dt^2} = -G M_{\odot} \frac{y_i}{r_i^3} + \sum_{j \neq i} G m_j \frac{y_j - y_i}{|\vec{r}_j - \vec{r}_i|^3}
+$$
 
-Once the system of equations is defined, I need to choose the initial conditions for each planet based on the parameters. The initial conditions are determined by the initial distance, which is the semi-major axis $a(1-e)$, and the initial velocity, given by $\displaystyle v = \sqrt{\frac{GM}{a}}$.
+Where $r_i = \sqrt{x_i^2 + y_i^2}$ is the distance from the Sun.
 
-    initial_conditions = {planet: [a * (1 - e), 0, 0, v(a, planet)] for planet, (a, e, _, _) in params.items()}
+> **Note**: In a previous version, Mercury’s perihelion precession was artificially introduced. This version uses purely Newtonian physics without additional relativistic corrections.
 
-Then, we numerically solve the equations of motion for each planet using odeint from the scipy library. We create a large yellow dot representing the Sun and place it at the center of the plot.
+---
 
-The goal is to generate the motion of the planets and plot their trajectories to clearly observe their orbits. We also include a timer in years (based on Earth's orbit). For each time step, we plot the new position of each planet $(x=$ solution[i, 0], $y=$ solution[i, 1] $)$ and their trajectories by keeping a few points plotted during the animation.
+## Implementation Highlights
 
-    def animate(i):
-    for (planet, solution, line, planet_point, trail) in zip(params, solutions.values(), lines, planets, trails):
-        x = solution[i, 0]
-        y = solution[i, 1]
-        line.set_data(x, y)
-        planet_point.set_data(x, y)
-        trail.set_data(solution[:i, 0], solution[:i, 1])
-    sun.set_offsets([0, 0])
+* **Numerical Integration**: Using `scipy.integrate.odeint` for time integration.
+* **Acceleration**: Core differential equation function accelerated with `@numba.njit`.
+* **2D Visualization**: Real-time orbital animation with `matplotlib.animation`.
+* **Interactive**: Hovering over planets or their orbits shows physical details (mass, speed, distance, blackbody temperature, etc.).
 
-    # Update time in years
-    years_elapsed = t_values[i] / (365.25 * 24 * 60 * 60)  # Convert to years
-    time_text.set_text(f'Time elapsed: {years_elapsed:.2f} years')
-    
-    return lines + planets + trails + [sun, time_text]
+---
 
-We animate the motion using FuncAnimation from the matplotlib.animation library.
-Here are screenshots of the simulation
+## 🪐 Planetary Parameters
 
-<img width="441" alt="image" src="https://github.com/HugoGW/Solar-System/assets/140922475/1aa5cc5d-84fa-43ad-91c3-39e60f23185c">
-<img width="430" alt="image" src="https://github.com/HugoGW/Solar-System/assets/140922475/0e627381-3d16-4abd-bafc-51fdfed01820">
-<img width="505" alt="image" src="https://github.com/HugoGW/Solar-System/assets/140922475/8501f7d6-527e-4c95-84e0-b27e7086279f">
+Each planet is defined by:
 
+* Semi-major axis $a$ (m)
+* Eccentricity $e$
+* Visual color
+* Display size
+* Mass $m$ (kg)
 
+```python
+params = {
+    'Mercury': (57.91e9, 0.2056, 'gray', 0.13, 3.30e23),
+    'Venus': (108.2e9, 0.0068, 'yellow', 0.5, 4.87e24),
+    'Earth': (1.496e11, 0.0167, 'royalblue', 0.5, 5.972e24),
+    'Mars': (227.9e9, 0.0934, 'red', 0.4, 6.42e23),
+    'Jupiter': (778.3e9, 0.049, 'orange', 1.5, 1.898e27),
+    'Saturn': (1.42e12, 0.056, 'gold', 1.3, 5.68e26),
+    'Uranus': (2.87e12, 0.046, 'lightseagreen', 0.8, 8.68e25),
+    'Neptune': (4.5e12, 0.010, 'blue', 0.8, 1.02e26)
+}
+```
 
+Initial conditions use:
 
+* $x_0 = a(1 - e)$
+* $v_0 = \sqrt{\frac{GM_\odot(1 + e)}{a(1 - e)}}$
+
+This places the planet at perihelion with appropriate tangential speed.
+
+---
+
+## 🖥 Output
+
+### Animation
+
+* Trajectories of all 8 planets
+* Central Sun (static)
+* Color-coded orbits and real-time position markers
+* Clock showing simulation time (in Earth years)
+* Planet hover tooltips displaying:
+
+  * Orbital period (in days and years)
+  * Instantaneous orbital speed
+  * Distance to the Sun (in AU and km)
+  * Estimated blackbody equilibrium temperature
+  * Planetary mass (with comparison to Earth)
+
+### Screenshots
+
+| Orbits                                                                                             | Positions                                                                                          | Interactivity                                                                                      |
+| -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| ![1](https://github.com/HugoGW/Solar-System/assets/140922475/1aa5cc5d-84fa-43ad-91c3-39e60f23185c) | ![2](https://github.com/HugoGW/Solar-System/assets/140922475/0e627381-3d16-4abd-bafc-51fdfed01820) | ![3](https://github.com/HugoGW/Solar-System/assets/140922475/8501f7d6-527e-4c95-84e0-b27e7086279f) |
+
+---
+
+## ⏱ Performance Tips
+
+* The system is accelerated with `numba` for faster computations.
+* You can reduce the time resolution (`t_values`) or number of simulated bodies for faster previews.
+* The full simulation spans **two Neptune orbits** (\~330 years).
+
+---
+
+## Features Recap
+
+* ✔ Mutual gravitational perturbations
+* ✔ Per-planet orbital characteristics
+* ✔ Realistic elliptical orbits
+* ✔ Sun hover info (radius, temperature, mass)
+* ✔ Dynamic tooltips and distance units
+* ✔ Clean visual layout with black background and color coding
+
+---
+
+## Possible Extensions
+
+* Include Pluto or asteroid belts
+* Add relativistic precession (for Mercury)
+* Implement zoom/pan interface
+* Export to video with `FFMpegWriter`
+* Build a 3D version using `plotly` or `pyvista`
+
+---
+
+## Requirements
+
+* Python 3.8+
+* `numpy`
+* `scipy`
+* `matplotlib`
+* `numba`
 
